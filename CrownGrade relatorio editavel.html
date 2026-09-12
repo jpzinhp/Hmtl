@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CrownGrade — Relatório Editável</title>
+<style>
+:root{
+  --pink:#f39ac2;
+  --pink2:#ffd4e5;
+  --dark:#171017;
+  --panel:#251d25;
+  --border:#493746;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--dark);color:#fff;font-family:Arial,sans-serif;padding:0}
+
+/* ---- painel de edição ---- */
+.editor{
+  background:var(--panel);
+  border-bottom:1px solid var(--border);
+  padding:18px 20px 22px;
+}
+.editor h3{margin:0 0 14px;font-size:15px;letter-spacing:1px;color:#cdbdca}
+.editor .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;max-width:900px;margin:auto}
+.editor label{display:block;font-size:11px;color:#cdbdca;margin-bottom:4px}
+.editor input{
+  width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--border);
+  background:#120e12;color:#fff;font-size:13px;
+}
+.editor input[type=color]{padding:3px;height:38px}
+.editor .full{grid-column:1/-1}
+.editor .section-label{grid-column:1/-1;font-size:11px;letter-spacing:1.5px;color:#7a6a76;margin-top:6px;text-transform:uppercase}
+.toggle-btn{
+  display:block;margin:14px auto 0;padding:10px 18px;border:0;border-radius:9px;
+  background:var(--pink);color:var(--dark);font-weight:800;cursor:pointer;font-size:13px;
+}
+
+/* ---- relatório (preview) ---- */
+.hero{
+  background:linear-gradient(135deg,var(--pink),var(--pink2));
+  color:var(--dark);
+  padding:28px 20px 34px;
+  border-radius:0 0 24px 24px;
+  text-align:center;
+  position:relative;
+}
+.hero h1{margin:0;font-size:22px;letter-spacing:2px;font-weight:800}
+.hero .sub{margin-top:6px;font-size:13px;opacity:.75}
+.wrap{max-width:520px;margin:0 auto;padding:20px}
+.card-info{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:18px 20px;
+  margin-top:-18px;
+  position:relative;
+  z-index:2;
+}
+.card-info h2{margin:0 0 2px;font-size:24px}
+.card-info .edition{color:#cdbdca;font-size:14px;margin:0}
+.grade-badge{
+  display:flex;align-items:center;justify-content:center;flex-direction:column;
+  width:88px;height:88px;border-radius:50%;
+  background:linear-gradient(135deg,var(--pink),var(--pink2));
+  color:var(--dark);float:right;margin-top:-40px;
+  box-shadow:0 4px 14px rgba(243,154,194,.4);
+}
+.grade-badge .n{font-size:32px;font-weight:900;line-height:1}
+.grade-badge .l{font-size:10px;letter-spacing:1px;font-weight:700}
+.clearfix{clear:both}
+.section-title{font-size:13px;letter-spacing:2px;color:#cdbdca;margin:28px 0 14px;text-transform:uppercase}
+.metric{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:14px 16px;
+  margin-bottom:12px;
+}
+.metric-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.metric-name{font-size:15px;font-weight:700}
+.metric-score{font-size:20px;font-weight:900;color:var(--pink)}
+.bar-bg{width:100%;height:8px;background:#120e12;border-radius:5px;overflow:hidden}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--pink),var(--pink2));border-radius:5px}
+.metric-note{font-size:12px;color:#cdbdca;margin-top:8px}
+.footer{text-align:center;padding:30px 20px 40px;color:#7a6a76;font-size:11px}
+.footer strong{color:var(--pink)}
+.id-row{display:flex;justify-content:space-between;font-size:12px;color:#cdbdca;margin-top:14px;border-top:1px solid var(--border);padding-top:12px}
+
+@media(max-width:600px){.editor .grid{grid-template-columns:1fr}}
+.viewer-hide{display:none !important}
+</style>
+</head>
+<body>
+
+<div class="editor" id="editorPanel">
+  <h3>✏️ Editar relatório</h3>
+  <div class="grid">
+    <div class="section-label">Dados da carta</div>
+    <div><label>Nome</label><input id="in_name" value="Sylveon"></div>
+    <div><label>Edição</label><input id="in_edition" value="Evoluções Prismáticas"></div>
+    <div><label>ID</label><input id="in_id" value="CG-000001"></div>
+    <div><label>Data</label><input id="in_date" value="12/09/2026"></div>
+
+    <div class="section-label">Notas</div>
+    <div><label>Nota final</label><input id="in_overall" type="number" min="0" max="10" step="0.5" value="10"></div>
+    <div><label>Centralização</label><input id="in_centering" type="number" min="0" max="10" step="0.5" value="10"></div>
+    <div><label>Cantos</label><input id="in_corners" type="number" min="0" max="10" step="0.5" value="10"></div>
+    <div><label>Bordas</label><input id="in_edges" type="number" min="0" max="10" step="0.5" value="10"></div>
+    <div><label>Superfície</label><input id="in_surface" type="number" min="0" max="10" step="0.5" value="10"></div>
+
+    <div class="section-label">Cores</div>
+    <div><label>Cor principal</label><input id="in_colorPink" type="color" value="#f39ac2"></div>
+    <div><label>Cor secundária (gradiente)</label><input id="in_colorPink2" type="color" value="#ffd4e5"></div>
+    <div><label>Fundo</label><input id="in_colorDark" type="color" value="#171017"></div>
+    <div><label>Fundo dos painéis</label><input id="in_colorPanel" type="color" value="#251d25"></div>
+    <div><label>Texto sobre o rosa (hero/badge)</label><input id="in_colorHeroText" type="color" value="#171017"></div>
+  </div>
+  <button class="toggle-btn" onclick="update()">Atualizar relatório</button>
+  <button class="toggle-btn" style="background:#fff;margin-top:8px" onclick="generateLabel()">🏷️ Gerar etiqueta com QR Code</button>
+</div>
+
+<div id="labelSection" style="display:none;padding:20px;text-align:center;background:var(--panel);border-bottom:1px solid var(--border)">
+  <h3 style="margin:0 0 14px;font-size:15px;letter-spacing:1px;color:#cdbdca">Etiqueta gerada</h3>
+  <label style="display:block;font-size:11px;color:#cdbdca;margin-bottom:6px">Link que o QR vai abrir (URL desta página publicada)</label>
+  <input id="in_qrUrl" style="width:100%;max-width:500px;padding:9px 10px;border-radius:8px;border:1px solid var(--border);background:#120e12;color:#fff;font-size:13px;margin-bottom:14px" value="" placeholder="https://seusite.com/relatorio/CG-000001">
+  <br>
+  <div style="display:flex;flex-direction:column;gap:16px;align-items:center">
+    <div>
+      <div style="font-size:11px;color:#cdbdca;margin-bottom:4px">FRENTE</div>
+      <div id="labelPreviewFront" style="display:inline-block;max-width:100%"></div>
+    </div>
+    <div>
+      <div style="font-size:11px;color:#cdbdca;margin-bottom:4px">VERSO</div>
+      <div id="labelPreviewBack" style="display:inline-block;max-width:100%"></div>
+    </div>
+  </div>
+  <br>
+  <button class="toggle-btn" onclick="downloadLabelSVG('front')">Baixar frente (SVG)</button>
+  <button class="toggle-btn" onclick="downloadLabelSVG('back')">Baixar verso (SVG)</button>
+  <p style="font-size:11px;color:#7a6a76;margin-top:10px">Tamanho real: 7 cm × 2 cm (frente e verso)</p>
+</div>
+
+<div class="hero" id="hero">
+  <h1>CROWNGRADE</h1>
+  <div class="sub">Relatório Digital de Avaliação</div>
+</div>
+
+<div class="wrap">
+  <div class="card-info">
+    <div class="grade-badge" id="gradeBadge">
+      <div class="n" id="overallGrade">10</div>
+      <div class="l">NOTA</div>
+    </div>
+    <h2 id="cardName">Sylveon</h2>
+    <p class="edition" id="cardEdition">Evoluções Prismáticas</p>
+    <div class="clearfix"></div>
+    <div class="id-row">
+      <span>ID: <span id="cardId">CG-000001</span></span>
+      <span id="cardDate">Avaliado em 12/09/2026</span>
+    </div>
+  </div>
+
+  <div class="section-title">Avaliação Detalhada</div>
+
+  <div class="metric">
+    <div class="metric-top"><span class="metric-name">Centralização</span><span class="metric-score" id="scoreCentering">10</span></div>
+    <div class="bar-bg"><div class="bar-fill" id="barCentering" style="width:100%"></div></div>
+    <div class="metric-note">Alinhamento da imagem em relação às bordas da carta.</div>
+  </div>
+
+  <div class="metric">
+    <div class="metric-top"><span class="metric-name">Cantos</span><span class="metric-score" id="scoreCorners">10</span></div>
+    <div class="bar-bg"><div class="bar-fill" id="barCorners" style="width:100%"></div></div>
+    <div class="metric-note">Nitidez e integridade dos quatro cantos da carta.</div>
+  </div>
+
+  <div class="metric">
+    <div class="metric-top"><span class="metric-name">Bordas</span><span class="metric-score" id="scoreEdges">10</span></div>
+    <div class="bar-bg"><div class="bar-fill" id="barEdges" style="width:100%"></div></div>
+    <div class="metric-note">Condição e uniformidade das bordas ao redor da carta.</div>
+  </div>
+
+  <div class="metric">
+    <div class="metric-top"><span class="metric-name">Superfície</span><span class="metric-score" id="scoreSurface">10</span></div>
+    <div class="bar-bg"><div class="bar-fill" id="barSurface" style="width:100%"></div></div>
+    <div class="metric-note">Presença de riscos, manchas ou imperfeições na frente e verso.</div>
+  </div>
+
+  <div class="footer">
+    Certificado por <strong>CrownGrade</strong> — avaliação e certificação de cards colecionáveis.<br>
+    Este relatório é gerado digitalmente e vinculado ao QR code da etiqueta física.
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+function val(id){return document.getElementById(id).value;}
+
+function qrMatrix(text){
+  const qr = qrcode(0, 'M'); // type 0 = auto-size
+  qr.addData(text);
+  qr.make();
+  const count = qr.getModuleCount();
+  const matrix = [];
+  for(let r=0;r<count;r++){
+    const row=[];
+    for(let c=0;c<count;c++) row.push(qr.isDark(r,c)?1:0);
+    matrix.push(row);
+  }
+  return matrix;
+}
+
+function qrToSVG(matrix,x,y,size){
+  const cells=matrix.length, cell=size/cells;
+  let s=`<rect x="${x}" y="${y}" width="${size}" height="${size}" fill="white"/>`;
+  for(let i=0;i<cells;i++) for(let j=0;j<cells;j++) if(matrix[i][j])
+    s+=`<rect x="${x+j*cell}" y="${y+i*cell}" width="${cell+0.15}" height="${cell+0.15}" fill="#111"/>`;
+  return s;
+}
+
+function esc(s){return String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+
+function generateLabel(){
+  const section = document.getElementById('labelSection');
+  section.style.display='block';
+  section.scrollIntoView({behavior:'smooth'});
+
+  const qrUrlInput = document.getElementById('in_qrUrl');
+  qrUrlInput.value = buildShareURL();
+  qrUrlInput.readOnly = false;
+
+  renderLabel();
+  qrUrlInput.oninput = renderLabel;
+}
+
+// Etiqueta física: 7 cm x 2 cm. viewBox interno mantém 700x200 (escala 100 unidades = 1cm)
+// para os textos/QR ficarem proporcionais, mas width/height reais do SVG são em cm.
+function baseLabelSVG(content){
+  const pink = val('in_colorPink');
+  const pink2 = val('in_colorPink2');
+  const tc = val('in_colorHeroText');
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="7cm" height="2cm" viewBox="0 0 700 200">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="${pink}"/><stop offset="1" stop-color="${pink2}"/></linearGradient></defs>
+  <rect x="4" y="4" width="692" height="192" rx="22" fill="url(#g)" stroke="${tc}" stroke-width="3"/>
+  <rect x="12" y="12" width="676" height="176" rx="17" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="2"/>
+  <path d="M28 164 L55 137 L82 164" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="4"/>
+  ${content}</svg>`;
+}
+
+function renderLabel(){
+  const name = esc(val('in_name'));
+  const edition = esc(val('in_edition'));
+  const grade = esc(val('in_overall'));
+  const tc = val('in_colorHeroText');
+  const url = document.getElementById('in_qrUrl').value || window.location.href;
+  const matrix = qrMatrix(url);
+
+  const front = baseLabelSVG(`
+  <text x="34" y="54" font-size="22" font-weight="800" fill="${tc}" letter-spacing="2">CROWNGRADE</text>
+  <text x="34" y="103" font-size="38" font-weight="800" fill="${tc}">${name}</text>
+  <text x="34" y="132" font-size="19" fill="${tc}">${edition}</text>
+  <line x1="465" y1="35" x2="465" y2="165" stroke="${tc}" stroke-width="2"/>
+  <text x="488" y="64" font-size="15" font-weight="700" fill="${tc}" letter-spacing="3">NOTA</text>
+  <text x="486" y="132" font-size="72" font-weight="900" fill="${tc}">${grade}</text>
+  ${qrToSVG(matrix,590,42,105)}`);
+
+  const back = baseLabelSVG(`
+  <text x="42" y="113" font-size="34" font-weight="800" fill="${tc}" letter-spacing="2">CROWNGRADE</text>
+  <line x1="465" y1="35" x2="465" y2="165" stroke="${tc}" stroke-width="2"/>
+  ${qrToSVG(matrix,530,43,105)}
+  <text x="34" y="165" font-size="12" fill="${tc}" opacity=".75">RELATÓRIO DIGITAL</text>`);
+
+  document.getElementById('labelPreviewFront').innerHTML = front;
+  document.getElementById('labelPreviewBack').innerHTML = back;
+  window._lastLabelSVGFront = front;
+  window._lastLabelSVGBack = back;
+}
+
+function downloadLabelSVG(side){
+  if(!window._lastLabelSVGFront){ generateLabel(); }
+  const svgContent = side==='back' ? window._lastLabelSVGBack : window._lastLabelSVGFront;
+  const label = side==='back' ? 'verso' : 'frente';
+  const svg = `<!-- CrownGrade — Etiqueta 7cm x 2cm, ${label}, QR Code escaneável -->\n${svgContent}`;
+  const blob = new Blob([svg],{type:'image/svg+xml'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'CrownGrade_etiqueta_'+(val('in_name')||'carta').replace(/\s+/g,'_')+'_'+label+'.svg';
+  a.click();
+}
+
+function update(){
+  // dados
+  document.getElementById('cardName').textContent = val('in_name');
+  document.getElementById('cardEdition').textContent = val('in_edition');
+  document.getElementById('cardId').textContent = val('in_id');
+  document.getElementById('cardDate').textContent = 'Avaliado em ' + val('in_date');
+
+  const overall = val('in_overall');
+  const centering = val('in_centering');
+  const corners = val('in_corners');
+  const edges = val('in_edges');
+  const surface = val('in_surface');
+
+  document.getElementById('overallGrade').textContent = overall;
+  document.getElementById('scoreCentering').textContent = centering;
+  document.getElementById('scoreCorners').textContent = corners;
+  document.getElementById('scoreEdges').textContent = edges;
+  document.getElementById('scoreSurface').textContent = surface;
+
+  document.getElementById('barCentering').style.width = (centering*10)+'%';
+  document.getElementById('barCorners').style.width = (corners*10)+'%';
+  document.getElementById('barEdges').style.width = (edges*10)+'%';
+  document.getElementById('barSurface').style.width = (surface*10)+'%';
+
+  // cores
+  const pink = val('in_colorPink');
+  const pink2 = val('in_colorPink2');
+  const dark = val('in_colorDark');
+  const panel = val('in_colorPanel');
+  const heroText = val('in_colorHeroText');
+
+  const root = document.documentElement.style;
+  root.setProperty('--pink', pink);
+  root.setProperty('--pink2', pink2);
+  root.setProperty('--dark', dark);
+  root.setProperty('--panel', panel);
+
+  document.getElementById('hero').style.color = heroText;
+  document.getElementById('gradeBadge').style.color = heroText;
+}
+
+// ---- Modo visualização: quando a página é aberta via link do QR code ----
+const FIELD_IDS = ['in_name','in_edition','in_id','in_date','in_overall','in_centering','in_corners','in_edges','in_surface','in_colorPink','in_colorPink2','in_colorDark','in_colorPanel','in_colorHeroText'];
+const PARAM_MAP = {name:'in_name',edition:'in_edition',id:'in_id',date:'in_date',overall:'in_overall',centering:'in_centering',corners:'in_corners',edges:'in_edges',surface:'in_surface',pink:'in_colorPink',pink2:'in_colorPink2',dark:'in_colorDark',panel:'in_colorPanel',heroText:'in_colorHeroText'};
+
+function buildShareURL(){
+  const base = window.location.href.split('?')[0];
+  const params = new URLSearchParams();
+  for(const [key, inputId] of Object.entries(PARAM_MAP)) params.set(key, val(inputId));
+  params.set('view','1');
+  return base + '?' + params.toString();
+}
+
+function applyURLParams(){
+  const params = new URLSearchParams(window.location.search);
+  if(!params.get('view')) return false;
+  for(const [key, inputId] of Object.entries(PARAM_MAP)){
+    if(params.has(key)) document.getElementById(inputId).value = params.get(key);
+  }
+  return true;
+}
+
+const isViewMode = applyURLParams();
+update();
+if(isViewMode){
+  document.getElementById('editorPanel').classList.add('viewer-hide');
+  document.getElementById('labelSection').classList.add('viewer-hide');
+}
+</script>
+
+</body>
+</html>
